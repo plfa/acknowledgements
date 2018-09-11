@@ -27,6 +27,9 @@ import System.IO (hPutStrLn, stderr, stdout)
 import System.Console.GetOpt
 import System.Environment (getProgName, getArgs, lookupEnv)
 
+
+-- * Options
+
 data Options = Options
   { optConfigFile :: Either FilePath (IO ByteString)
   }
@@ -50,10 +53,13 @@ options =
     "Show help."
   , Option "v" ["version"]
     (NoArg (\_ -> do
-               hPutStrLn stdout $ "agda2html " ++ showVersion version
+               hPutStrLn stdout $ "acknowledgements " ++ showVersion version
                exitSuccess))
     "Show version."
   ]
+
+
+-- * Main
 
 main :: IO ()
 main = do
@@ -116,6 +122,7 @@ instance FromJSON Config where
     Config <$>
     o .: "authors" <*>
     o .: "repository"
+  parseJSON _ = fail "Expected Object for Author value"
 
 
 -- * Contributors
