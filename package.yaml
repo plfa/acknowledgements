@@ -1,7 +1,7 @@
 name:                acknowledgements
 version:             0.1.0.0
 github:              "plfa/acknowledgements"
-license:             BSD3
+license:             LGPL
 author:              "Wen Kokke"
 maintainer:          "wen.kokke@gmail.com"
 copyright:           "Copyright (C) 2018 Wen Kokke"
@@ -22,7 +22,7 @@ dependencies:
 - yaml
 
 executables:
-  plfa-acknowledgements:
+  acknowledgements:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
