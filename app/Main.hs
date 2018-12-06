@@ -3,6 +3,7 @@
 module Main where
 
 import Control.Arrow (second)
+import Control.Monad.Catch (throwM)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
@@ -97,7 +98,7 @@ main = do
 -- * Authors
 
 parseConfig :: ByteString -> IO Config
-parseConfig rawConfig = Y.decodeThrow rawConfig
+parseConfig rawConfig = either throwM return $ Y.decodeEither' rawConfig
 
 data Author = Author
   { authorName  :: Text

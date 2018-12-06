@@ -16,10 +16,11 @@ dependencies:
 - base >= 4.7 && < 5
 - bytestring
 - containers
+- exceptions
 - github
 - text
 - vector
-- yaml
+- yaml >= 0.8.3
 
 executables:
   acknowledgements:
