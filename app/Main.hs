@@ -19,19 +19,17 @@ import Data.Version (showVersion)
 import Data.Yaml (FromJSON(..), ToJSON(..), (.:), (.:?), (.=))
 import qualified Data.Yaml as Y
 import qualified GitHub as GH
-import qualified GitHub.Endpoints.Users as GH
-import qualified GitHub.Endpoints.Repos.Commits as GH
 
 import Paths_acknowledgements (version)
 import System.Exit (exitSuccess)
-import System.IO (hPutStrLn, stderr, stdout)
+import System.IO (hPutStrLn, stderr)
 import System.Console.GetOpt
 import System.Environment (getProgName, getArgs, lookupEnv)
 
 
 -- * Options
 
-data Options = Options
+newtype Options = Options
   { optConfigFile :: Either FilePath (IO ByteString)
   }
 
@@ -54,7 +52,7 @@ options =
     "Show help."
   , Option "v" ["version"]
     (NoArg (\_ -> do
-               hPutStrLn stdout $ "acknowledgements " ++ showVersion version
+               putStrLn $ "acknowledgements " ++ showVersion version
                exitSuccess))
     "Show version."
   ]
@@ -144,35 +142,37 @@ instance ToJSON Contributors where
 
 
 -- |Get an authentication token from the environment.
-getAuth :: IO (Maybe (GH.Auth))
+getAuth :: IO GH.Auth
 getAuth = do
-    token <- lookupEnv "GITHUB_TOKEN"
-    pure (GH.OAuth . fromString <$> token)
+    mtoken <- lookupEnv "GITHUB_TOKEN"
+    case mtoken of
+      Nothing -> error "please set GITHUB_TOKEN"
+      Just token -> return (GH.OAuth . fromString $ token)
 
 -- |Get user information from a user login.
 getUserInfo
-  :: Maybe GH.Auth -> GH.SimpleUser
+  :: GH.Auth -> GH.SimpleUser
   -> IO GH.User
 getUserInfo auth simpleUser =
-  fromRight =<< GH.userInfoFor' auth (GH.simpleUserLogin simpleUser)
+  fromRight =<< GH.github auth GH.userInfoForR (GH.simpleUserLogin simpleUser)
 
 -- |Get user information for every user login.
 getAllUserInfo
-  :: Maybe GH.Auth -> [GH.SimpleUser]
+  :: GH.Auth -> [GH.SimpleUser]
   -> IO [GH.User]
 getAllUserInfo auth simpleUser =
   mapM (getUserInfo auth) simpleUser
 
 -- |Get commit history for a repository.
 getCommits
-  :: Maybe GH.Auth -> GH.Name GH.Owner -> GH.Name GH.Repo
+  :: GH.Auth -> GH.Name GH.Owner -> GH.Name GH.Repo
   -> IO [GH.Commit]
 getCommits auth owner repo =
-  V.toList <$> (fromRight =<< GH.commitsFor' auth owner repo)
+  V.toList <$> (fromRight =<< GH.github auth GH.commitsForR owner repo GH.FetchAll)
 
 -- |Get user information for every user who authored a commit.
 getContributors
-  :: Maybe GH.Auth -> GH.Name GH.Owner -> GH.Name GH.Repo
+  :: GH.Auth -> GH.Name GH.Owner -> GH.Name GH.Repo
   -> IO [Contributor]
 getContributors auth owner repo = do
 
